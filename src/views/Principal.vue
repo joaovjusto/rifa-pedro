@@ -152,7 +152,7 @@ export default {
       // return reservedNumbers
       let arrNumbers = [];
       let i;
-      for (i = 1; i <= 300; i++) {
+      for (i = 1; i <= 150; i++) {
         if (this.reservedNumbers.find(number => number === i)) {
           arrNumbers.push({
             number: i,
