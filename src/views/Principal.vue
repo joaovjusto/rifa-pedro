@@ -59,10 +59,11 @@
             placeholder="Selecione"
           >
             <el-option
-              v-for="(item, i) in 300"
+              v-for="(item, i) in returnNumbers"
               :key="i"
-              :label="i + 1"
-              :value="i + 1"
+              v-if="!item.reserved"
+              :label="item.number"
+              :value="item.number"
             >
             </el-option>
           </el-select>
@@ -74,6 +75,7 @@
             action=""
             :on-change="fileInput"
             :file-list="fileList"
+            v-loading="loadingUpload"
             :auto-upload="false"
             list-type="picture"
           >
@@ -106,6 +108,7 @@ export default {
   name: "principal",
   data() {
     return {
+      loadingUpload: false,
       reservedNumbers: [],
       uploaded: false,
       fileList: [],
@@ -186,6 +189,7 @@ export default {
         .then(() => {
           console.log("Document successfully written!");
           this.dialogVisible = false;
+          this.uploaded = false;
           this.form = {
             user: "",
             celular: "",
@@ -222,6 +226,8 @@ export default {
           const metadata = { contentType: file.type };
           const that = this;
 
+          that.loadingUpload = true;
+
           // await FirebaseStorage.ref().child(filePath);
           fetch(url)
             .then(res => res.blob())
@@ -236,6 +242,7 @@ export default {
                   console.log("filePath: ", filePath);
 
                   that.uploaded = true;
+                  that.loadingUpload = false;
 
                   FirebaseStorage.ref()
                     .child(filePath)
