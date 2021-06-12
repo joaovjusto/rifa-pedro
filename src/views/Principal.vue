@@ -138,10 +138,11 @@ export default {
   },
   computed: {
     returnModalWidth() {
-      if (window.screen.width > 600) {
-        return '40%';
-      }else {
-        return '80%';
+      console.log(document.body.clientWidth);
+      if (document.body.clientWidth > 600) {
+        return "40%";
+      } else {
+        return "80%";
       }
     },
     returnNumbers() {
@@ -194,6 +195,10 @@ export default {
             status: "reserved"
           };
           this.fileList = [];
+          this.$message({
+            message: "Obrigado pela contribuição e boa sorte!!",
+            type: "success"
+          });
         })
         .catch(error => {
           console.error("Error writing document: ", error);
