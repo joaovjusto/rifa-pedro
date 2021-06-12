@@ -23,7 +23,7 @@
     <el-dialog
       :title="`Reservar número ${openedNumer}`"
       :visible.sync="dialogVisible"
-      width="30%"
+      :width="returnModalWidth"
     >
       <div class="form-row">
         <div class="col-12">
@@ -137,6 +137,13 @@ export default {
     this.loadingTimer();
   },
   computed: {
+    returnModalWidth() {
+      if (window.screen.width > 600) {
+        return '40%';
+      }else {
+        return '80%';
+      }
+    },
     returnNumbers() {
       // return reservedNumbers
       let arrNumbers = [];
