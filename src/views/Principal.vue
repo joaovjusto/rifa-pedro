@@ -15,7 +15,12 @@
             @click="openDialog(i + 1)"
           >
             <span>{{ item.number }}</span>
-            <span class="d-block" v-if="item.reserved">VENDIDO</span>
+            <!-- <small class="d-block mt-0 ml-2" v-if="item.reserved"
+              >VENDIDO</small
+            > -->
+            <small class="d-block ml-2" v-if="item.reserved">{{
+              item.user.split(" ")[0]
+            }}</small>
           </div>
         </div>
       </div>
@@ -132,7 +137,7 @@ export default {
 
         data.numbers.map(number => {
           if (!this.reservedNumbers.find(currNumber => currNumber === number)) {
-            this.reservedNumbers.push(number);
+            this.reservedNumbers.push({ number, user: data.user });
           }
         });
       });
@@ -153,14 +158,19 @@ export default {
       let arrNumbers = [];
       let i;
       for (i = 1; i <= 150; i++) {
-        if (this.reservedNumbers.find(number => number === i)) {
+        const numberTEMP = this.reservedNumbers.find(
+          number => number.number === i
+        );
+        if (numberTEMP) {
           arrNumbers.push({
             number: i,
+            user: numberTEMP.user,
             reserved: true
           });
         } else {
           arrNumbers.push({
             number: i,
+            user: "",
             reserved: false
           });
         }
