@@ -8,7 +8,13 @@ import "./styles.scss";
 import "bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 
+import VueCarousel from "vue-carousel";
+import VuePictureSwipe from "vue-picture-swipe";
 import VueTheMask from "vue-the-mask";
+
+Vue.component("vue-picture-swipe", VuePictureSwipe);
+Vue.use(VuePictureSwipe);
+Vue.use(VueCarousel);
 Vue.use(VueTheMask);
 
 Vue.use(ElementUI);

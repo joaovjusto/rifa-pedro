@@ -136,7 +136,10 @@ export default {
         const data = change.doc.data();
 
         data.numbers.map(number => {
-          if (!this.reservedNumbers.find(currNumber => currNumber === number)) {
+          if (
+            !this.reservedNumbers.find(currNumber => currNumber === number) &&
+            data.status !== "deleted"
+          ) {
             this.reservedNumbers.push({ number, user: data.user });
           }
         });
@@ -360,11 +363,14 @@ img {
 
 @media only screen and (max-width: 640px) {
   .margin-20 {
-    margin-top: -31px;
+    position: absolute;
+    z-index: 2;
+    margin-top: -34px;
+    padding-top: 10px;
   }
   .top-background {
     background: url("../assets/top_background.png") no-repeat contain;
-    min-height: 130px;
+    min-height: 85px;
     background-size: cover;
   }
   .body {

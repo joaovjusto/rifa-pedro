@@ -2,26 +2,49 @@
   <div>
     <div class="top-background" />
     <div class="margin-20">
-      <div class="text-center w-100">
-        <label class="label-style" for="" style="color: white"
-          >Selecione o número desejado, caso queira mais de um terá a opção
-          acessando um deles</label
-        >
-      </div>
-      <div class="d-flex pt-5 flex-wrap body">
-        <div v-for="(item, i) in returnNumbers" :key="i" class="p-2">
-          <div
-            :class="`card-number ${item.reserved ? 'reserved' : ''}`"
-            @click="openDialog(i + 1)"
+      <div class="d-flex pt-5 flex-wrap body hg-100">
+        <div class="d-block image-container" id="carousel">
+          <carousel
+            :navigationEnabled="true"
+            :perPage="1"
+            :touchDrag="false"
+            :mouseDrag="false"
           >
-            <span>{{ item.number }}</span>
-            <!-- <small class="d-block mt-0 ml-2" v-if="item.reserved"
-              >VENDIDO</small
-            > -->
-            <small class="d-block ml-2" v-if="item.reserved">{{
-              item.user.split(" ")[0]
-            }}</small>
-          </div>
+            <slide
+              v-for="(item, index) in comprovantes"
+              :key="index"
+              v-if="item.status === 'reserved'"
+            >
+              <div class="width:100%">
+                <img v-if="canRenderCarousel" :src="item.url" alt="" />
+                <div class="text-center">
+                  <small for="">Comprador:</small>
+                  <small>
+                    {{ item.user }}
+                  </small>
+                  <el-divider direction="vertical"></el-divider>
+                  <small for="">Números comprados:</small>
+                  <small>
+                    {{ item.numbers.length }}
+                  </small>
+                  <div class="d-block mt-2">
+                    <el-button
+                      type="danger"
+                      icon="el-icon-delete"
+                      @click="previousPage(item)"
+                      circle
+                    ></el-button>
+                    <el-button
+                      type="success"
+                      icon="el-icon-check"
+                      @click="nextPage(item)"
+                      circle
+                    ></el-button>
+                  </div>
+                </div>
+              </div>
+            </slide>
+          </carousel>
         </div>
       </div>
     </div>
@@ -113,6 +136,9 @@ export default {
   name: "principal",
   data() {
     return {
+      canRenderCarousel: false,
+      updateCarousel: 0,
+      comprovantes: [],
       loadingUpload: false,
       reservedNumbers: [],
       uploaded: false,
@@ -131,10 +157,19 @@ export default {
     };
   },
   mounted() {
-    console.log("dasd");
     this.unsubscribe = numbersCollection.onSnapshot(querySnapshot => {
       querySnapshot.docChanges().forEach(change => {
         const data = change.doc.data();
+        const id = change.doc.id;
+        const that = this;
+        data.id = id;
+        this.updateCarousel += 1;
+        setTimeout(function() {
+          that.canRenderCarousel = true;
+          let el = document.getElementsByClassName("VueCarousel-dot");
+          el[0].click();
+        }, 2000);
+        this.comprovantes.push(data);
 
         data.numbers.map(number => {
           if (!this.reservedNumbers.find(currNumber => currNumber === number)) {
@@ -192,11 +227,51 @@ export default {
     }
   },
   methods: {
+    nextPage(item) {
+      this.unsubscribe();
+      const tempObj = Object.assign({}, item);
+      tempObj.status = "confirmed";
+      numbersCollection
+        .doc(tempObj.id)
+        .update(tempObj)
+        .then(() => {
+          let el = document.getElementsByClassName(
+            "VueCarousel-navigation-next"
+          );
+          el[0].click();
+
+          this.$message({
+            message: "Número confirmado com sucesso!!",
+            type: "success"
+          });
+        });
+    },
+    previousPage(item) {
+      this.unsubscribe();
+      const tempObj = Object.assign({}, item);
+      tempObj.status = "deleted";
+      numbersCollection
+        .doc(tempObj.id)
+        .delete()
+        .then(() => {
+          let el = document.getElementsByClassName(
+            "VueCarousel-navigation-next"
+          );
+          el[0].click();
+
+          this.$message({
+            message: "Número deletado com sucesso!!",
+            type: "success"
+          });
+        });
+    },
     finishPayment() {
+      console.log(this.form);
       numbersCollection
         .doc()
         .set(this.form)
         .then(() => {
+          console.log("Document successfully written!");
           this.dialogVisible = false;
           this.uploaded = false;
           this.form = {
@@ -212,6 +287,9 @@ export default {
             message: "Obrigado pela contribuição e boa sorte!!",
             type: "success"
           });
+        })
+        .catch(error => {
+          console.error("Error writing document: ", error);
         });
     },
     openDialog(i) {
@@ -241,7 +319,12 @@ export default {
               FirebaseStorage.ref()
                 .child(filePath)
                 .put(blob, metadata)
-                .then(function() {
+                .then(function(snapshot) {
+                  console.log(snapshot);
+                  console.log("Uploaded a blob!");
+
+                  console.log("filePath: ", filePath);
+
                   that.uploaded = true;
                   that.loadingUpload = false;
 
@@ -249,11 +332,17 @@ export default {
                     .child(filePath)
                     .getDownloadURL()
                     .then(function(url) {
+                      console.log(url);
                       that.form.url = url;
+                    })
+                    .catch(function(error) {
+                      console.log(error);
                     });
                 })
             );
         }
+      } catch (e) {
+        console.error(e);
       } finally {
         this.processing = false;
       }
@@ -273,8 +362,47 @@ export default {
 
 <style lang="scss">
 @import url("https://fonts.googleapis.com/css?family=Open+Sans");
+
+.VueCarousel-navigation {
+  position: absolute;
+  top: -100000px;
+}
+#container {
+  padding: 0 60px;
+}
+
+.VueCarousel-dot-container {
+  pointer-events: none;
+}
+
+.image-container {
+  max-width: 100%;
+}
+
+.VueCarousel-slide {
+  position: relative;
+  background: transparent;
+  color: #fff;
+  font-family: Arial;
+  font-size: 24px;
+  text-align: center;
+  min-height: 100px;
+  img {
+    max-height: 500px;
+  }
+}
+
+.label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
 .v-modal {
   display: none;
+}
+.hg-100 {
+  height: 100vh;
 }
 .el-dialog__wrapper {
   background-color: rgba(0, 0, 0, 0.3);
@@ -345,15 +473,23 @@ img {
 
 @media only screen and (max-width: 640px) {
   .margin-20 {
-    margin-top: -31px;
+    position: absolute;
+    z-index: 2;
+    margin-top: 22px;
+    padding-top: 10px;
   }
   .top-background {
     background: url("../assets/top_background.png") no-repeat contain;
-    min-height: 130px;
+    min-height: 85px;
     background-size: cover;
   }
   .body {
     padding: 0 10px 30px 10px;
+  }
+  .VueCarousel-slide {
+    img {
+      max-height: 500px;
+    }
   }
 }
 @media only screen and (min-width: 1600px) {

@@ -17,6 +17,8 @@
     "jquery": "^3.4.1",
     "popper.js": "^1.15.0",
     "vue": "^2.6.10",
+    "vue-carousel": "^0.18.0",
+    "vue-picture-swipe": "^2.1.0",
     "vue-router": "^3.0.3",
     "vue-the-mask": "^0.11.1",
     "vuex": "^3.0.1"
