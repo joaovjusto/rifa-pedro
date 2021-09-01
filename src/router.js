@@ -17,6 +17,12 @@ export default new Router({
       name: "admin",
       component: () =>
         import(/* webpackChunkName: "admin" */ "./views/Admin.vue")
+    },
+    {
+      path: "/check-user-data",
+      name: "check",
+      component: () =>
+        import(/* webpackChunkName: "admin" */ "./views/Check.vue")
     }
   ]
 });

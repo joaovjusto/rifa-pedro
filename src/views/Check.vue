@@ -12,12 +12,9 @@
         <div v-for="(item, i) in returnNumbers" :key="i" class="p-2">
           <div
             :class="`card-number ${item.reserved ? 'reserved' : ''}`"
-            @click="openDialog(i + 1)"
+            @click="openDialog(i + 1, item)"
           >
             <span>{{ item.number }}</span>
-            <!-- <small class="d-block mt-0 ml-2" v-if="item.reserved"
-              >VENDIDO</small
-            > -->
             <small class="d-block ml-2" v-if="item.reserved">{{
               item.user.split(" ")[0]
             }}</small>
@@ -33,12 +30,13 @@
       <div class="form-row">
         <div class="col-12">
           <label for="">Nome Completo</label>
-          <el-input placeholder="Insira seu nome" v-model="form.user">
+          <el-input disabled placeholder="Insira seu nome" v-model="form.user">
           </el-input>
         </div>
         <div class="col-12 mt-3">
           <label for="">Telefone</label>
           <el-input
+            disabled
             v-mask="['(##) ####-####', '(##) #####-####']"
             placeholder="Insira seu telefone"
             v-model="form.celular"
@@ -47,20 +45,20 @@
         </div>
         <div class="col-12 mt-3">
           <label for="">E-mail</label>
-          <el-input placeholder="Insira seu E-mail" v-model="form.email">
+          <el-input
+            disabled
+            placeholder="Insira seu E-mail"
+            v-model="form.email"
+          >
           </el-input>
         </div>
         <div class="col-12 mt-3">
-          <label for=""
-            >Números Adicionais
-            <small class="d-block"
-              >(opcional deixe vazio caso seja apenas um)</small
-            >
-          </label>
+          <label for="">Números </label>
           <el-select
             class="w-100"
             v-model="form.numbers"
             multiple
+            disabled
             placeholder="Selecione"
           >
             <el-option
@@ -73,35 +71,7 @@
             </el-option>
           </el-select>
         </div>
-        <div class="col-12 mt-3">
-          <label for="">Upload do comprovante (R$ 20,00 por número)</label>
-          <el-upload
-            class="upload-demo"
-            action=""
-            :on-change="fileInput"
-            :file-list="fileList"
-            v-loading="loadingUpload"
-            :auto-upload="false"
-            list-type="picture"
-          >
-            <el-button size="small" type="primary"
-              >Clique para fazer o upload</el-button
-            >
-            <div slot="tip" class="el-upload__tip">
-              aceito arquivos jpg/png
-            </div>
-          </el-upload>
-        </div>
       </div>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="dialogVisible = false">Cancelar</el-button>
-        <el-button
-          :disabled="returnDisabled"
-          type="primary"
-          @click="finishPayment()"
-          >Confirmar</el-button
-        >
-      </span>
     </el-dialog>
   </div>
 </template>
@@ -131,15 +101,6 @@ export default {
     };
   },
   mounted() {
-    function randomNumber() {
-      return Math.floor(Math.random() * 150) + 1;
-    }
-    const number = [randomNumber(), randomNumber(), randomNumber()];
-    const listaFiltrada = number.sort(function(a, b) {
-      return a - b;
-    });
-
-    console.log(listaFiltrada);
     this.unsubscribe = numbersCollection.onSnapshot(querySnapshot => {
       querySnapshot.docChanges().forEach(change => {
         const data = change.doc.data();
@@ -149,7 +110,11 @@ export default {
             !this.reservedNumbers.find(currNumber => currNumber === number) &&
             data.status !== "deleted"
           ) {
-            this.reservedNumbers.push({ number, user: data.user });
+            this.reservedNumbers.push({
+              number,
+              user: data.user,
+              userObj: data
+            });
           }
         });
       });
@@ -158,7 +123,6 @@ export default {
   },
   computed: {
     returnModalWidth() {
-      console.log(document.body.clientWidth);
       if (document.body.clientWidth > 600) {
         return "40%";
       } else {
@@ -177,12 +141,14 @@ export default {
           arrNumbers.push({
             number: i,
             user: numberTEMP.user,
+            userObj: numberTEMP.userObj,
             reserved: true
           });
         } else {
           arrNumbers.push({
             number: i,
             user: "",
+            userObj: {},
             reserved: false
           });
         }
@@ -204,7 +170,6 @@ export default {
   },
   methods: {
     finishPayment() {
-      console.log(this.form);
       numbersCollection
         .doc()
         .set(this.form)
@@ -230,7 +195,9 @@ export default {
           console.error("Error writing document: ", error);
         });
     },
-    openDialog(i) {
+    openDialog(i, user) {
+      this.form = user.userObj;
+
       this.form.numbers = [i];
       this.openedNumer = i;
       this.dialogVisible = true;
@@ -362,7 +329,7 @@ img {
   }
   &.reserved {
     background-color: rgba(255, 73, 130, 0.8);
-    pointer-events: none;
+    pointer-events: all;
   }
 }
 
